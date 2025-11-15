@@ -237,8 +237,12 @@ def fit_force_cython(double[:] ref_thetas,
     for t in range(n_steps - 1, -1, -1):
         force_est[t] = force_bins.bin2val_c(force_b)
         if t > 0:
-            force_b = backref[t, force_b, theta_dot_b, theta_offset_b, 0]
-            theta_dot_b = backref[t, force_b, theta_dot_b, theta_offset_b, 1]
-            theta_offset_b = backref[t, force_b, theta_dot_b, theta_offset_b, 2]
+            # Read previous-state indices using the current (force_b, theta_dot_b, theta_offset_b)
+            prev_force_b = backref[t, force_b, theta_dot_b, theta_offset_b, 0]
+            prev_theta_dot_b = backref[t, force_b, theta_dot_b, theta_offset_b, 1]
+            prev_theta_offset_b = backref[t, force_b, theta_dot_b, theta_offset_b, 2]
+            force_b = prev_force_b
+            theta_dot_b = prev_theta_dot_b
+            theta_offset_b = prev_theta_offset_b
     
     return np.asarray(force_est)
