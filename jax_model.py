@@ -1,7 +1,5 @@
 import jax
 import jax.numpy as jp
-import tqdm
-#import optax
 
 class TorqueLeverSimulationJAX:
 
@@ -13,7 +11,6 @@ class TorqueLeverSimulationJAX:
                  motor_extra_torque,
                  motor_onset_angle,
                  friction_coeff,
-                 autoregressive_penalty,
                  dt = 1e-3,
                  gravity_acc = 9.82):
         self.inertia = lever_mass * (lever_length**2)/3
@@ -27,7 +24,6 @@ class TorqueLeverSimulationJAX:
         self.friction_coeff = friction_coeff
         self.gravity_coeff = -lever_mass * gravity_acc * lever_length / 2
         self.dt = dt
-        self.autoregressive_penalty = autoregressive_penalty
 
     def step(self, carry, force):
         theta, theta_dot = carry
@@ -57,31 +53,11 @@ class TorqueLeverSimulationJAX:
         new_theta = jp.clip(new_theta, self.lever_min, self.lever_max)
 
         return (new_theta, new_theta_dot), new_theta
-        
-    def eval_candidate(self, candidate, reference_thetas):
-        force, start_theta, start_theta_dot = candidate
+
+    def run(self, input_forces, start_theta=None, start_theta_dot=0.0):
+        if start_theta is None:
+            start_theta = self.lever_max - jp.deg2rad(5.0) #5 degrees below max
         _, thetas = jax.lax.scan(self.step,
                               init=(start_theta, start_theta_dot),
-                              xs=force)
-        loss = -jp.mean(jp.square(thetas - reference_thetas))
-        loss -= self.autoregressive_penalty * jp.mean(jp.abs(jp.ediff1d(force)))
-        return loss, thetas
-    
-    def fit_force(self, reference_thetas, n_steps=1000, eps=1e-4, start_candidate = None):
-        if start_candidate is None:
-            start_candidate = (jp.zeros_like(reference_thetas), jp.array(reference_thetas[0]), jp.array(0.0))
-        loss_fn = jax.jit(lambda cand: self.eval_candidate(cand, reference_thetas))
-        grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
-        losses = []
-        candidate = start_candidate
-        optimizer = optax.adam(learning_rate=eps)
-        opt_state = optimizer.init(candidate)
-
-        # Replace the gradient descent loop with:
-        for i in tqdm.trange(n_steps):
-            (loss, thetas), grad = grad_fn(candidate)
-            updates, opt_state = optimizer.update(grad, opt_state)
-            candidate = jax.tree_util.tree_map(lambda x, u: x - u, candidate, updates)
-            losses.append(loss)
-        final_loss, theta = loss_fn(candidate)
-        return jp.array(losses), candidate, theta
+                              xs=input_forces)
+        return thetas
