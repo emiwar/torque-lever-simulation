@@ -6,10 +6,10 @@ import jax.numpy as jp
 SIM_PARAMS = dict(
     lever_mass=33e-3,                        # kg
     lever_length=14.5e-2,                    # m
-    lever_range=(50, 93),                    # degrees (hard stop at each end)
+    lever_range=(50, 95),                    # degrees (hard stop at each end)
     motor_baseline_torque=0.1,               # Nm, always active
     motor_extra_torque=0.0,                  # Nm, varied across trials
-    motor_onset_angle=(85.15625, 89.55078),  # degrees (ramp start, ramp end)
+    motor_onset_angle=(80.76172, 85.15625),  # degrees (ramp start, ramp end)
     friction_coeff=0.0,
     dt=1e-3,                                 # s
 )
@@ -77,7 +77,7 @@ class TorqueLeverSimulationJAX:
     def run(self, strategy, duration, start_theta=None, start_theta_dot=0.0):
         """Simulate for `duration` seconds and return the angle trajectory."""
         if start_theta is None:
-            start_theta = self.lever_max - jp.deg2rad(5.0)  # 5° below upper stop
+            start_theta = self.lever_max# - jp.deg2rad(5.0)  # 5° below upper stop
 
         def step(carry, _):
             return self.step(carry, strategy)
