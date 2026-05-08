@@ -74,10 +74,9 @@ class TorqueLeverSimulationJAX:
 
         return (new_theta, new_theta_dot, strategy_carry), new_theta
 
-    def run(self, strategy, duration, start_theta=None, start_theta_dot=0.0):
+    def run(self, strategy, duration, start_theta_dot=0.0):
         """Simulate for `duration` seconds and return the angle trajectory."""
-        if start_theta is None:
-            start_theta = self.lever_max# - jp.deg2rad(5.0)  # 5° below upper stop
+        start_theta = self.lever_max
 
         def step(carry, _):
             return self.step(carry, strategy)

@@ -12,9 +12,12 @@ from simulation import TorqueLeverSimulationJAX, SIM_PARAMS
 TARGET_DEG = 67.5
 BOUND_DEG  = 5.0
 
-# Motor extra-torques swept during evaluation (added on top of baseline torque)
-EVAL_TORQUES = jp.arange(-0.05, 0.15, 0.005)   # 40 levels, fine grid
-PLOT_TORQUES = jp.arange(-0.05, 0.15, 0.02)    # 10 levels, one curve each
+# Range of motor extra-torques (added on top of baseline torque)
+EXTRA_TORQUE_MIN = -0.05   # Nm
+EXTRA_TORQUE_MAX =  0.15   # Nm
+
+EVAL_TORQUES = jp.arange(EXTRA_TORQUE_MIN, EXTRA_TORQUE_MAX, 0.005)   # 40 levels, fine grid
+PLOT_TORQUES = jp.arange(EXTRA_TORQUE_MIN, EXTRA_TORQUE_MAX, 0.02)    # 10 levels, one curve each
 
 EVAL_DURATION = 1.0   # seconds
 PLOT_DURATION = 1.0   # seconds
