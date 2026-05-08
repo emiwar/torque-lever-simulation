@@ -1,0 +1,17 @@
+{
+  "FixedForce": {
+    "force": -2.43994140625
+  },
+  "PController": {
+    "kp": 9.300000190734863
+  },
+  "PDController": {
+    "kp": 23.75,
+    "kd": 0.22500000894069672
+  },
+  "PIDController": {
+    "kp": 7.0,
+    "ki": 0.04,
+    "kd": 0.25
+  }
+}
