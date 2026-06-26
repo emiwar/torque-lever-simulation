@@ -12,12 +12,14 @@ from simulation import TorqueLeverSimulationJAX, SIM_PARAMS
 TARGET_DEG = 67.5
 BOUND_DEG  = 5.0
 
-# Range of motor extra-torques (added on top of baseline torque)
+# Range of motor extra-torques (added on top of the 0.1 Nm baseline torque).
+# extra = challenge - baseline, so this gives a phase-2 challenge torque of
+# [0.05, 0.15] Nm, matching the real task (protocol.md).
 EXTRA_TORQUE_MIN = -0.05   # Nm
-EXTRA_TORQUE_MAX =  0.15   # Nm
+EXTRA_TORQUE_MAX =  0.05   # Nm
 
-EVAL_TORQUES = jp.arange(EXTRA_TORQUE_MIN, EXTRA_TORQUE_MAX, 0.005)   # 40 levels, fine grid
-PLOT_TORQUES = jp.arange(EXTRA_TORQUE_MIN, EXTRA_TORQUE_MAX, 0.02)    # 10 levels, one curve each
+EVAL_TORQUES = jp.arange(EXTRA_TORQUE_MIN, EXTRA_TORQUE_MAX, 0.005)   # fine grid
+PLOT_TORQUES = jp.arange(EXTRA_TORQUE_MIN, EXTRA_TORQUE_MAX, 0.02)    # one curve each
 
 EVAL_DURATION = 1.0   # seconds
 PLOT_DURATION = 1.0   # seconds

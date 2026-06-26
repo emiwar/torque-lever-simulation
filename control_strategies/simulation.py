@@ -6,7 +6,7 @@ import jax.numpy as jp
 SIM_PARAMS = dict(
     lever_mass=33e-3,                        # kg
     lever_length=14.5e-2,                    # m
-    lever_range=(50, 95),                    # degrees (hard stop at each end)
+    lever_range=(50, 92.012),                # degrees (hard stop at each end; 478 clicks)
     motor_baseline_torque=0.1,               # Nm, always active
     motor_extra_torque=0.0,                  # Nm, varied across trials
     motor_onset_angle=(80.76172, 85.15625),  # degrees (ramp start, ramp end)
@@ -48,16 +48,22 @@ class TorqueLeverSimulationJAX:
         self.dt = dt
 
     def step(self, carry, strategy):
-        theta, theta_dot, strategy_carry = carry
+        theta, theta_dot, min_theta, strategy_carry = carry
         force, strategy_carry = strategy(theta, theta_dot, strategy_carry)
+
+        # Deepest angle reached so far this trial (only ever decreases).
+        min_theta = jp.minimum(min_theta, theta)
 
         # Agent can only pull the lever downward (negative torque)
         torque_agent = self.lever_length * force * jp.sin(theta) / 2
         torque_agent = jp.clip(torque_agent, -jp.inf, 0.0)
 
-        # Motor torque ramps up linearly as the lever approaches the onset window
+        # Motor torque ramps up linearly as the lever approaches the onset window.
+        # The ramp is driven by the deepest angle reached, so once the torque has
+        # shifted toward the challenge it never relaxes back (it only moves toward
+        # the challenge), as in the real task.
         torque_motor = self.baseline_torque
-        ramp = jp.clip((self.onset_max - theta) / (self.onset_max - self.onset_min), 0, 1)
+        ramp = jp.clip((self.onset_max - min_theta) / (self.onset_max - self.onset_min), 0, 1)
         torque_motor += self.extra_torque * ramp
 
         torque_grav = self.gravity_coeff * jp.sin(theta)
@@ -72,7 +78,7 @@ class TorqueLeverSimulationJAX:
         new_theta_dot *= jp.logical_and(new_theta >= self.lever_min, new_theta <= self.lever_max)
         new_theta = jp.clip(new_theta, self.lever_min, self.lever_max)
 
-        return (new_theta, new_theta_dot, strategy_carry), new_theta
+        return (new_theta, new_theta_dot, min_theta, strategy_carry), new_theta
 
     def run(self, strategy, duration, start_theta_dot=0.0):
         """Simulate for `duration` seconds and return the angle trajectory."""
@@ -83,7 +89,7 @@ class TorqueLeverSimulationJAX:
 
         _, thetas = jax.lax.scan(
             step,
-            init=(start_theta, start_theta_dot, strategy.init_carry()),
+            init=(start_theta, start_theta_dot, start_theta, strategy.init_carry()),
             length=int(duration / self.dt),
         )
         return thetas

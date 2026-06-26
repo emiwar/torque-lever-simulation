@@ -28,17 +28,22 @@ networks = make_mlp_actor_critic(
 config = default_config()
 config.ppo.n_envs         = 2048
 config.ppo.total_steps    = 500_000_000
+# Episodes are now variable length (a press to the target then release; up to the
+# 3 s MAX_PRESS_STEPS cap). The reward is sparse (one per trial, at release), and
+# the rollout auto-resets on `done`, so this length just sets the rollout horizon.
 config.ppo.rollout_length = 1000
 config.ppo.learning_rate  = 3e-4
 
 
 def log_fn(metrics, step):
-    if 'episode_reward/p50' in metrics:
-        r50  = metrics['episode_reward/p50']
-        r0   = metrics['episode_reward/p0']
-        r100 = metrics['episode_reward/p100']
-        span = metrics['lifespan_mean']
-        print(f'step {step:>8d}  reward median={r50:.3f}  [{r0:.3f}, {r100:.3f}]  lifespan={span:.1f}')
+    # nnx-ppo >=0.3.0: all eval metrics are `eval/`-prefixed, and lifespan now
+    # follows the percentile convention (p{N}, not `lifespan_mean`).
+    if 'eval/episode_reward/p50' in metrics:
+        r50  = metrics['eval/episode_reward/p50']
+        r0   = metrics['eval/episode_reward/p0']
+        r100 = metrics['eval/episode_reward/p100']
+        span = metrics['eval/lifespan/p50']
+        print(f'step {step:>8d}  reward median={r50:.3f}  [{r0:.3f}, {r100:.3f}]  lifespan(median)={span:.1f}')
 
 
 CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), 'checkpoints')

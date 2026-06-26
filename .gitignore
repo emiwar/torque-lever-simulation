@@ -2,3 +2,5 @@ __pycache__/
 .ipynb_checkpoints/
 data/
 env/
+control_strategies/reinforcement_learning/old_checkpoints/
+control_strategies/reinforcement_learning/checkpoints/
